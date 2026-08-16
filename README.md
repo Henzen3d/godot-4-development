@@ -2,6 +2,10 @@
 
 A comprehensive, production-grade Godot Engine 4.x development skill and reference manual tailored for AI coding agents (Claude Code, Antigravity IDE, Cursor, Hermes Agent, GPT) and human developers.
 
+<p align="center">
+  <img src="Character_jumping_into_game_engine_202608161833.jpeg" alt="Godot 4 AI Game Development" width="100%">
+</p>
+
 ---
 
 ## 🎯 Overview
