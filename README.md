@@ -51,6 +51,10 @@ This repository provides structured guidelines, GDScript 2.0 idiom patterns, and
 ### Antigravity IDE / Claude Code / Hermes Agent / Cursor
 Point your agent to load `SKILL.md` as its system context or skill definition when working on Godot 4 projects. The skill dynamically routes to specific files in `references/` as needed to save token budget while maintaining high accuracy.
 
+<p align="center">
+  <img src="Robot_building_game_level_2K_202608161836.jpeg" alt="AI Agent Building Godot Game Level" width="100%">
+</p>
+
 ---
 
 ## 📄 License
