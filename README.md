@@ -48,8 +48,35 @@ This repository provides structured guidelines, GDScript 2.0 idiom patterns, and
 
 ## 🤖 How to Use with AI Agents
 
-### Antigravity IDE / Claude Code / Hermes Agent / Cursor
-Point your agent to load `SKILL.md` as its system context or skill definition when working on Godot 4 projects. The skill dynamically routes to specific files in `references/` as needed to save token budget while maintaining high accuracy.
+### Standalone Skill (Zero Setup Required)
+You can use this skill immediately with **Antigravity IDE, Claude Code, Cursor, Hermes Agent, or ChatGPT** simply by adding this repository or `SKILL.md` to your agent's knowledge/skills directory. The agent will read rules and on-demand references to generate precise, error-free Godot 4 code.
+
+---
+
+## 🔌 Connecting Godot MCP Servers (Optional)
+
+To grant your AI agent **hands-on editor automation and runtime inspection superpowers**, you can connect an external Godot MCP server:
+
+### Option A: `tugcantopaloglu/godot-mcp` (Node / Headless & Bridge)
+Add to your `mcp_config.json` or client settings:
+```json
+{
+  "mcpServers": {
+    "godot": {
+      "command": "npx",
+      "args": ["-y", "@tugcantopaloglu/godot-mcp@latest"]
+    }
+  }
+}
+```
+
+### Option B: `IvanMurzak/Godot-MCP` (Godot Asset Library #5245)
+1. In the Godot 4 editor, open the **AssetLib** tab and search for **Godot-MCP**.
+2. Download and enable the plugin in `Project Settings > Plugins`.
+3. Configure your agent to connect to the exposed local MCP port.
+
+> [!NOTE]
+> The skill is designed to work **both with or without** an MCP server. If no MCP server is present, the agent automatically falls back to surgical file editing and CLI commands.
 
 <p align="center">
   <img src="Robot_building_game_level_2K_202608161836.jpeg" alt="AI Agent Building Godot Game Level" width="100%">
