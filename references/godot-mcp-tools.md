@@ -1,126 +1,126 @@
-# Godot MCP — Manual Operacional do Hermes
+# Godot MCP — Operational Manual
 
-## Propósito
+## Purpose
 
-Este documento orienta o agente na operação de servidores **Model Context Protocol (MCP)** acoplados à Godot Engine 4.x. Ele fornece diretrizes para interagir com ferramentas headless, gerenciar o editor, conectar-se à ponte de runtime e conduzir playtests baseados em evidências.
+This document guides AI agents in operating **Model Context Protocol (MCP)** servers connected to Godot Engine 4.x. It establishes protocols for interacting with headless tooling, editor control, runtime bridges, and evidence-based playtesting.
 
 ---
 
-## Fontes de Referência e Ecossistemas MCP
+## Reference Sources & MCP Ecosystems
 
-Existem duas implementações principais no ecossistema Godot 4:
+There are two primary implementations in the Godot 4 ecosystem:
 
 1. **`tugcantopaloglu/godot-mcp`**:
-   - ~157 ferramentas abrangendo operações headless no projeto, manipulação de cenas/nós/recursos via JSON, injeção de input, controle de áudio/física/UI e ponte de runtime via TCP (`127.0.0.1:9090` com `McpInteractionServer`).
-   - Suporte a GDScript e C#/.NET.
+   - ~157 tools covering headless project operations, scene/node/resource JSON manipulation, input injection, audio/physics/UI control, and runtime bridging via TCP (`127.0.0.1:9090` with `McpInteractionServer`).
+   - Supports both GDScript and C#/.NET.
 2. **`IvanMurzak/Godot-MCP` (Asset Library #5245)**:
-   - 42 ferramentas integradas em 12 famílias (Scene, Node, Script, Resource, Filesystem, Project, Screenshot, Debugger, etc.) como plugin de editor em C# para Godot 4.3+.
+   - 42 tools grouped into 12 functional families (Scene, Node, Script, Resource, Filesystem, Project, Screenshot, Debugger, etc.) as a C# editor plugin for Godot 4.3+.
 
 > [!IMPORTANT]
-> O schema de ferramentas fornecido pela sessão ativa é a **única fonte de verdade**. Nunca invoque nomes de ferramentas de memória sem antes consultar as ferramentas disponibilizadas na sessão.
+> The active session's tool schema is the **single source of truth**. Never invoke tool names from memory without inspecting the schemas provided in the session.
 
 ---
 
-## 1. Fluxo de Descoberta Dinâmica de Ferramentas
+## 1. Dynamic Tool Discovery Workflow
 
 ```mermaid
 flowchart TD
-    A[Identificar Intenção] --> B[Consultar Schema MCP da Sessão]
-    B --> C{Ferramenta Existe?}
-    C -- Sim --> D[Validar Tipos de Argumentos]
-    D --> E[Executar Chamada MCP]
-    E --> F[Inspecionar Resposta/Log]
-    C -- Não --> G[Usar Alternativa Fallback: CLI / Edição Cirúrgica de Arquivo]
+    A[Identify Intent] --> B[Query Active MCP Tool Schema]
+    B --> C{Tool Exists?}
+    C -- Yes --> D[Validate Argument Types]
+    D --> E[Execute MCP Call]
+    E --> F[Inspect Response / Log]
+    C -- No --> G[Use Fallback Alternative: CLI / Surgical File Editing]
 ```
 
-1. **Descubra as ferramentas disponíveis:** Verifique os nomes e descrições das ferramentas expostas.
-2. **Leia o schema de parâmetros:** Inspecione tipos esperados (ex.: caminhos como `res://`, vetores como `{"x": 100, "y": 200}` ou arrays de floats).
-3. **Execute com argumentos validados:** Previna chamadas com campos ausentes.
-4. **Trate falhas com elegância:** Se a ferramenta MCP não estiver disponível, recorra a comandos de terminal (`godot --headless`) ou manipulação direta de arquivos `.tscn` e `.gd`.
+1. **Discover Available Tools:** Check exposed tool names and descriptions.
+2. **Read Parameter Schemas:** Inspect expected types (e.g., paths like `res://`, vectors like `{"x": 100, "y": 200}`, or arrays of floats).
+3. **Execute with Validated Arguments:** Prevent invocations with missing required fields.
+4. **Handle Fallbacks Gracefully:** If a specific MCP tool is unavailable, fall back to CLI commands (`godot --headless`) or direct manipulation of `.tscn` and `.gd` files.
 
 ---
 
-## 2. Categorias Funcionais de Ferramentas
+## 2. Functional Tool Categories
 
-| Categoria | Operações Típicas | Modo de Operação |
+| Category | Typical Operations | Operation Mode |
 |---|---|---|
-| **Project** | Ler/alterar `project.godot`, listar autoloads, configurar `InputMap`, obter versão. | Headless / Estático |
-| **Filesystem** | Criar/mover/ler arquivos em `res://`, gerenciar UIDs (`.uid`). | Estático |
-| **Scenes** | Criar cenas `.tscn`, instanciar nós, alterar hierarquia, salvar alterações. | Headless / Parser |
-| **Nodes** | Adicionar nós, configurar propriedades (`position`, `visible`, etc.), reparentar, deletar. | Headless ou Runtime |
-| **Scripts** | Criar `.gd`, anexar a nós, validar sintaxe, inspecionar membros e sinais. | Estático |
-| **Resources** | Criar/editar `.tres` (materiais, `SpriteFrames`, `Theme`, `AudioStreamRandomizer`). | Headless |
-| **Runtime Control** | Iniciar jogo (`run_project`), pausar, parar, obter árvore de nós ao vivo. | Runtime Bridge |
-| **Input Injection** | Simular ações do `InputMap` (`press_action`, `release_action`, `set_action_vector`). | Runtime Bridge |
-| **Visual / Screenshot** | Capturar tela do jogo em execução para validação de bugs gráficos ou UI. | Runtime Bridge / OS |
-| **Debug / Eval** | Executar snippets de GDScript na SceneTree viva (`game_eval`), ler console de erros. | Runtime Bridge |
+| **Project** | Read/modify `project.godot`, list autoloads, configure `InputMap`, query version. | Headless / Static |
+| **Filesystem** | Create/move/read files in `res://`, manage UIDs (`.uid`). | Static |
+| **Scenes** | Create `.tscn` scenes, instantiate nodes, modify hierarchy, save changes. | Headless / Parser |
+| **Nodes** | Add nodes, configure properties (`position`, `visible`, etc.), reparent, delete. | Headless or Runtime |
+| **Scripts** | Create `.gd`, attach to nodes, validate syntax, inspect members and signals. | Static |
+| **Resources** | Create/edit `.tres` (materials, `SpriteFrames`, `Theme`, `AudioStreamRandomizer`). | Headless |
+| **Runtime Control** | Launch game (`run_project`), pause, stop, query live node tree. | Runtime Bridge |
+| **Input Injection** | Simulate `InputMap` actions (`press_action`, `release_action`, `set_action_vector`). | Runtime Bridge |
+| **Visual / Screenshot** | Capture running game window for UI/visual bug verification. | Runtime Bridge / OS |
+| **Debug / Eval** | Evaluate GDScript snippets in live SceneTree (`game_eval`), read error console. | Runtime Bridge |
 
 ---
 
-## 3. Operações Headless vs. Runtime Bridge
+## 3. Headless vs. Runtime Bridge Operations
 
-### Modo Headless (Authoring / Estático)
-Ideal para tarefas de desenvolvimento que não exigem a janela do jogo aberta:
-- Criação e modificação de scripts `.gd` e cenas `.tscn`.
-- Configuração de camadas de física (`layer_names/2d_physics/*`).
-- Registro de ações no `InputMap`.
-- Execução de testes automatizados ou compilação estática (`godot --headless --script res://test_suite.gd`).
+### Headless Mode (Authoring / Static)
+Ideal for development tasks that do not require an active game window:
+- Creating and editing `.gd` scripts and `.tscn` scenes.
+- Setting up physics collision layer names (`layer_names/2d_physics/*`).
+- Registering actions in `InputMap`.
+- Running automated headless tests (`godot --headless --script res://test_suite.gd`).
 
-### Modo Runtime Bridge (Jogo em Execução)
-Necessário para diagnosticar física, interações, animações e interfaces dinâmicas:
-- A ponte conecta o agente ao processo do jogo via socket local (ex.: TCP `127.0.0.1:9090` ou WebSocket).
-- Permite inspecionar nós criados dinamicamente que não aparecem no arquivo de cena estático.
-- Permite capturar screenshots do viewport do jogo em instantes específicos.
+### Runtime Bridge Mode (Running Game Process)
+Required for diagnosing physics, interactions, animations, and dynamic UI:
+- Connects the agent to the game process via local socket (e.g., TCP `127.0.0.1:9090` or WebSocket).
+- Allows inspecting dynamically spawned nodes that do not exist in static scene files.
+- Captures viewport screenshots at specific frames.
 
 > [!NOTE]
-> Se uma chamada de runtime falhar, verifique se:
-> 1. O jogo foi iniciado e a janela está ativa;
-> 2. O nó da ponte MCP (autoload ou plugin) foi devidamente inicializado;
-> 3. A porta local não está bloqueada por firewall ou em conflito.
+> If a runtime call fails, verify that:
+> 1. The game was launched and the window is active;
+> 2. The MCP bridge node (autoload or plugin) initialized properly;
+> 3. The local port is not blocked by a firewall or port conflict.
 
 ---
 
-## 4. Segurança, Integridade de Arquivos e Mitigações
+## 4. Security, File Integrity & Mitigations
 
-- **Prevenção de Path Traversal (CVE-2026-15522):** Sempre use caminhos relativos normalizados com o prefixo `res://` (ex.: `res://scenes/player.tscn`). Rejeite caminhos que contenham `../` que apontem para fora do diretório do projeto.
-- **Edições Atômicas:** Sempre que modificar arquivos `.tscn` textuais ou `project.godot`, preserve seções existentes não relacionadas.
-- **Confirmação em Operações Destrutivas:** Nunca exclua pastas inteiras ou substitua cenas principais sem verificar o impacto em instâncias filhas.
+- **Path Traversal Prevention:** Always use normalized relative paths prefixed with `res://` (e.g., `res://scenes/player.tscn`). Reject any path containing `../` that resolves outside the project root.
+- **Atomic Modifications:** When editing textual `.tscn` or `project.godot` files, preserve unrelated existing sections.
+- **Destructive Operations:** Never wipe entire directories or replace main scenes without verifying dependencies in child scenes.
 
 ---
 
-## 5. Playtest Orientado a Evidências (Passo a Passo)
+## 5. Evidence-Based Playtesting (Step-by-Step)
 
-Para comprovar que uma mecânica ou correção funciona:
+To verify mechanics and bug fixes:
 
 ```text
-1. Validar sintaxe dos scripts modificados.
-2. Iniciar o projeto (via MCP run_project ou terminal).
-3. Aguardar o carregamento da cena principal.
-4. Injetar input controlado (ex.: pressionar "ui_right" por 500ms).
-5. Consultar a posição e velocidade do Player na SceneTree viva.
-6. Capturar uma screenshot comprovando a mudança visual.
-7. Verificar se ocorreram erros ou warnings no debugger.
-8. Encerrar o processo do jogo e compilar o relatório de evidências.
+1. Validate syntax of modified scripts.
+2. Launch project (via MCP run_project or terminal).
+3. Wait for main scene initialization.
+4. Inject controlled input (e.g., hold "ui_right" for 500ms).
+5. Query Player position and velocity in live SceneTree.
+6. Capture screenshot to verify visual change.
+7. Inspect debugger for warnings or runtime errors.
+8. Terminate game process and summarize findings.
 ```
 
-### Exemplo: Teste de Pulo do Personagem
-- **Ação:** Injetar ação `"jump"`.
-- **Evidência esperada:** `player.velocity.y < 0` imediatamente após o salto e `player.is_on_floor() == false`.
-- **Evidência após 1 segundo:** `player.is_on_floor() == true` (aterrissou com sucesso) sem erros de colisão no log.
+### Example: Character Jump Verification
+- **Action:** Inject `"jump"` action.
+- **Expected Evidence:** `player.velocity.y < 0` immediately after jump and `player.is_on_floor() == false`.
+- **Evidence after 1 second:** `player.is_on_floor() == true` (safely landed) with no collision errors in logs.
 
 ---
 
-## 6. Avaliação Segura de Código em Runtime (`game_eval`)
+## 6. Safe Runtime Evaluation (`game_eval`)
 
-Quando a ferramenta `game_eval` (ou equivalente) estiver disponível:
-- Use exclusivamente para **consultas e diagnósticos** rápidos:
+When `game_eval` (or equivalent) is enabled:
+- Restrict usage to **queries and diagnostics**:
   ```gdscript
-  # Exemplo de consulta segura
+  # Safe read-only inspection
   return {
       "player_pos": get_tree().current_scene.get_node("Player").global_position,
       "is_on_floor": get_tree().current_scene.get_node("Player").is_on_floor(),
       "current_health": get_tree().current_scene.get_node("Player").health
   }
   ```
-- Evite executar mutações permanentes em estado que possam mascarar bugs da lógica principal.
-- Nunca deixe chamadas de `eval` registradas no código final do projeto.
+- Avoid executing permanent state mutations that mask core logic bugs.
+- Never leave temporary eval hooks in production code.

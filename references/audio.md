@@ -1,37 +1,37 @@
-# Áudio — Players, Buses, AudioStreamRandomizer e Feedback Sonoro
+# Audio — Players, Buses, AudioStreamRandomizer & Sound Feedback
 
-## Propósito
+## Purpose
 
-Garantir um design de áudio imersivo, dinâmico e sem repetições cansativas no Godot 4.x, utilizando barramentos, efeitos, recursos de randomização e pooling de som.
+Ensure immersive, dynamic, non-fatiguing audio design in Godot 4.x using audio buses, sound effects, randomization resources, and SFX pooling.
 
 ---
 
-## 1. Escolha dos Players de Áudio
+## 1. Audio Player Types
 
-| Tipo de Player | Escopo | Uso Recomendado |
+| Player Type | Spatial Scope | Recommended Use |
 |---|---|---|
-| `AudioStreamPlayer` | Global / Estéreo | Trilha musical (BGM), cliques de UI, vozes de narrador. |
-| `AudioStreamPlayer2D` | Posicional 2D | Passos, explosões, tochas, inimigos (possui atenuação por distância e pan). |
-| `AudioStreamPlayer3D` | Espacial 3D | Efeitos sonoros 3D com efeito Doppler, atenuação física e cone de emissão. |
+| `AudioStreamPlayer` | Global / Stereo | Background music (BGM), UI clicks, narrator voiceovers. |
+| `AudioStreamPlayer2D` | Positional 2D | Footsteps, explosions, torches, enemies (distance attenuation and panning). |
+| `AudioStreamPlayer3D` | Positional 3D | 3D sound effects with Doppler effect, physical attenuation, and emission cones. |
 
 ---
 
-## 2. Estrutura de Barramentos (Audio Buses)
+## 2. Audio Buses Structure
 
-Configure os barramentos em `Audio` (aba inferior do editor):
+Configure audio buses in the `Audio` bottom panel of the editor:
 
 ```text
 Master (0 dB)
-├── Music (Volume BGM)
-│   └── [Efeito Opcional: LowPassFilter desativado para menu de pausa]
-├── SFX (Volume Efeitos)
+├── Music (BGM Volume)
+│   └── [Optional Effect: LowPassFilter disabled during gameplay, enabled in Pause Menu]
+├── SFX (Sound Effects Volume)
 │   ├── Combat
-│   └── Environment (Efeito: Reverb)
-└── UI (Volume Interface)
+│   └── Environment (Effect: Reverb)
+└── UI (Interface Volume)
 ```
 
-### Controle de Volume por Código (Decibéis vs Linear)
-Sliders de UI operam de $0.0$ a $1.0$ (linear). O Godot opera em decibéis ($-\infty$ a $0\text{ dB}$):
+### Controlling Volume via Code (Decibels vs Linear)
+UI sliders operate on linear scale $0.0$ to $1.0$. Godot handles volume in decibels ($-\infty$ to $0\text{ dB}$):
 ```gdscript
 func set_bus_volume(bus_name: String, linear_value: float) -> void:
     var bus_idx := AudioServer.get_bus_index(bus_name)
@@ -42,25 +42,25 @@ func set_bus_volume(bus_name: String, linear_value: float) -> void:
 
 ---
 
-## 3. `AudioStreamRandomizer` (Anti-Fadiga Auditiva)
+## 3. `AudioStreamRandomizer` (Anti-Fatigue Audio)
 
-No Godot 4, utilize o recurso nativo `AudioStreamRandomizer` no Inspector para evitar sons repetitivos:
-- **Streams:** Adicione 2 a 5 variações do mesmo som (ex.: 4 sons de passos diferentes).
-- **Random Pitch:** Configure `random_pitch = 1.15` (varia a afinação em $\pm 15\%$ a cada disparo).
-- **Random Volume:** Configure `random_volume_offset_db = 1.5`.
-
----
-
-## 4. Polifonia Nativa (`max_polyphony`)
-
-No Godot 4, você pode configurar a propriedade `max_polyphony` no próprio `AudioStreamPlayer` (ex.: `max_polyphony = 8`).
-- Permite tocar o mesmo player repetidamente sem cortar o som anterior que ainda está ecoando.
+In Godot 4, use the built-in `AudioStreamRandomizer` resource in the Inspector to prevent repetitive auditory fatigue:
+- **Streams:** Add 2 to 5 sound variations (e.g., 4 distinct footstep recordings).
+- **Random Pitch:** Set `random_pitch = 1.15` (varies pitch by $\pm 15\%$ on each trigger).
+- **Random Volume:** Set `random_volume_offset_db = 1.5`.
 
 ---
 
-## 5. Gerenciador de Áudio Transiente (One-Shot SFX Helper)
+## 4. Native Polyphony (`max_polyphony`)
 
-Para sons que ocorrem na posição de um objeto destruído (ex.: explosão de um inimigo que acabou de chamar `queue_free()`):
+In Godot 4, you can configure the `max_polyphony` property directly on `AudioStreamPlayer` (e.g., `max_polyphony = 8`).
+- Allows playing rapid repeated sounds without prematurely cutting off previous echoing audio instances.
+
+---
+
+## 5. One-Shot Positional SFX Spawner
+
+For sounds played at the position of a destroyed entity (e.g., an enemy explosion immediately calling `queue_free()`):
 
 ```gdscript
 # AudioManager.gd (Autoload)
@@ -73,7 +73,7 @@ func play_sfx_at_position(stream: AudioStream, global_pos: Vector2, bus: String 
     player.global_position = global_pos
     player.autoplay = true
     
-    # Destrói automaticamente quando o som acabar
+    # Automatically free when audio ends
     player.finished.connect(player.queue_free)
     
     get_tree().current_scene.add_child(player)
@@ -81,20 +81,20 @@ func play_sfx_at_position(stream: AudioStream, global_pos: Vector2, bus: String 
 
 ---
 
-## 6. Crossfade de Música com `Tween`
+## 6. Music Crossfade with `Tween`
 
-Para alternar entre faixas de música de forma cinematográfica:
+Seamlessly blend between music tracks:
 
 ```gdscript
 func crossfade_to_music(new_stream: AudioStream, duration: float = 1.5) -> void:
     var tween := create_tween().set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
     
-    # Fade out da faixa atual
+    # Fade out current track
     tween.tween_property(%MusicPlayer, "volume_db", -40.0, duration)
     tween.tween_callback(func():
         %MusicPlayer.stream = new_stream
         %MusicPlayer.play()
     )
-    # Fade in da nova faixa
+    # Fade in new track
     tween.tween_property(%MusicPlayer, "volume_db", 0.0, duration)
 ```

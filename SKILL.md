@@ -1,126 +1,126 @@
 ---
 name: godot-4-development
-description: Especialista operacional em Godot Engine 4.x para o Hermes Agent. Use para criar, editar, depurar, testar, executar, inspecionar e iterar projetos Godot 4.x, incluindo GDScript 2.0 tipado, cenas, Nodes, Resources, InputMap, sinais, física 2D/3D, UI responsiva, animação, áudio, shaders, networking, exportação e automação via MCP. Priorize inspeção do projeto real, ferramentas MCP realmente expostas e validação observável antes de declarar sucesso.
-compatibility: Hermes Agent + Godot 4.x + MCP Godot compatível (tugcantopaloglu/godot-mcp, IvanMurzak/Godot-MCP ou equivalente).
+description: Operational specialist for Godot Engine 4.x for AI coding agents and developers. Use for creating, editing, debugging, testing, running, inspecting, and iterating Godot 4.x projects, including typed GDScript 2.0, scenes, Nodes, Resources, InputMap, signals, 2D/3D physics, responsive UI, animation, audio, shaders, networking, export, and MCP automation. Prioritize inspecting the actual project, using active MCP tools, and verifiable validation before declaring success.
+compatibility: AI Agents (Antigravity, Claude Code, Cursor, Hermes) + Godot 4.x + Compatible Godot MCP (tugcantopaloglu/godot-mcp, IvanMurzak/Godot-MCP or equivalent).
 ---
 
 # Godot 4.x Development
 
-## Missão
+## Mission
 
-Não seja apenas um gerador de GDScript. Seja um operador verificável do Godot:
+Do not be just a GDScript generator. Be a verifiable Godot operator:
 
-**entender → inspecionar → planejar → modificar → executar → observar → corrigir → validar**
+**understand → inspect → plan → modify → execute → observe → fix → validate**
 
-A engine deve ser tratada como um sistema coerente de **Nodes + Scenes + SceneTree + Signals + Resources**, e o MCP como uma camada de controle e observação sobre o estado real do projeto.
-
----
-
-## Regras de Ouro
-
-1. **Descubra a versão real**: Identifique a versão do Godot (4.0, 4.2, 4.3, 4.4+) antes de depender de APIs específicas (ex.: interpolação física em 4.3+, novos typed dictionaries, etc.).
-2. **Inspecione antes de editar**: Leia os arquivos de cena (`.tscn`), scripts (`.gd`), recursos (`.tres`) e `project.godot` existentes antes de propor modificações.
-3. **Zero alucinação**: Nunca invente classes, métodos, propriedades, sinais, nós ou ferramentas MCP que não existam na versão atual.
-4. **Sem código legado**: Não misture convenções de Godot 3.x com 4.x (evite `yield`, `KinematicBody`, conexão antiga de sinais em string, `onready` sem `@`, etc.).
-5. **Composição sobre Herança**: Prefira composição de cenas e nós reutilizáveis a hierarquias profundas de herança.
-6. **"Call Down, Signal Up"**: Nós pais chamam métodos e definem propriedades em nós filhos; nós filhos emitem sinais para notificar pais e sistemas externos.
-7. **InputMap consistente**: Use sempre ações declaradas no `InputMap` (via `Input.get_vector()`, `Input.is_action_just_pressed()`), nunca teclas físicas hardcoded nos scripts.
-8. **Edição mínima e segura**: Faça a menor alteração coerente que resolve a tarefa. Evite reescritas totais de arquivos quando alterações pontuais são suficientes.
-9. **Segurança de filesystem**: Valide caminhos relativos ao projeto (`res://`), previna path traversal e confirme antes de operações destrutivas.
-10. **Validação em runtime**: Para bugs visuais ou de física, utilize screenshots, logs do debugger e inspeção da `SceneTree` viva.
-11. **Contrato de entrega real**: Diferencie claramente:
-    - **Arquivo alterado** (código salvo no disco);
-    - **Validado estaticamente** (sem erros de sintaxe ou tipos);
-    - **Validado em runtime** (executado, input simulado e comportamento observado).
+Treat the engine as a coherent system of **Nodes + Scenes + SceneTree + Signals + Resources**, and MCP as a control and observation layer over the actual project state.
 
 ---
 
-## Arquitetura da Skill
+## Golden Rules
 
-Esta `SKILL.md` funciona como roteador central. Carregue o arquivo de referência correspondente sob demanda:
+1. **Discover the Real Version**: Identify the exact Godot version (4.0, 4.2, 4.3, 4.4+) before depending on version-specific APIs (e.g., 2D/3D physics interpolation in 4.3+, typed dictionaries, etc.).
+2. **Inspect Before Editing**: Read existing scene files (`.tscn`), scripts (`.gd`), resources (`.tres`), and `project.godot` before proposing changes.
+3. **Zero Hallucination**: Never invent classes, methods, properties, signals, nodes, or MCP tools that do not exist in the current version.
+4. **No Legacy Code**: Do not mix Godot 3.x patterns with 4.x (avoid `yield`, `KinematicBody`, string-based signal connections, `onready` without `@`, etc.).
+5. **Composition Over Inheritance**: Prefer scene composition and reusable nodes over deep inheritance hierarchies.
+6. **"Call Down, Signal Up"**: Parent nodes call methods and set properties on child nodes; child nodes emit signals to notify parents and external systems.
+7. **Consistent InputMap**: Always use actions declared in the `InputMap` (via `Input.get_vector()`, `Input.is_action_just_pressed()`), never hardcoded physical keys in scripts.
+8. **Minimal & Safe Edits**: Make the smallest coherent edit that solves the task. Avoid full file rewrites when targeted edits suffice.
+9. **Filesystem Safety**: Validate paths relative to project (`res://`), prevent path traversal, and confirm before destructive operations.
+10. **Runtime Validation**: For visual or physics bugs, use screenshots, debugger logs, and live `SceneTree` inspection.
+11. **Clear Delivery Contract**: Clearly distinguish between:
+    - **File Changed** (code written to disk);
+    - **Statically Validated** (free of syntax and typing errors);
+    - **Runtime Validated** (executed, input simulated, and behavior observed).
 
-| Documento | Foco Operacional |
+---
+
+## Skill Architecture
+
+This `SKILL.md` acts as the central router. Load the corresponding reference file on demand:
+
+| Document | Operational Focus |
 |---|---|
-| `references/gdscript-4.x.md` | GDScript 2.0, tipagem estática, anotações (`@export`, `@onready`), Callables, lambdas e Resources. |
-| `references/scenes-and-nodes.md` | Arquitetura de SceneTree, ciclo de vida de nós, nós únicos (`%Node`), Signal Bus e carregamento de cenas. |
-| `references/physics-2d-3d.md` | `CharacterBody2D/3D`, `move_and_slide()`, colisões (layers/masks), raycasts, rampas, coyote time e Navigation. |
-| `references/ui.md` | `Control`, Containers, Anchor Presets, Size Flags, temas (`StyleBoxFlat`), acessibilidade e foco. |
-| `references/animation.md` | `AnimationPlayer`, `AnimationTree` (StateMachine/BlendTree), SpriteFrames e receitas de `Tween`. |
-| `references/audio.md` | `AudioStreamPlayer`, buses, efeitos, `AudioStreamRandomizer`, pooling e transições de áudio. |
-| `references/shaders.md` | CanvasItem (2D) e Spatial (3D), uniforms, screen textures, damage flash, outline e dissolve. |
-| `references/networking.md` | `MultiplayerSynchronizer`, `MultiplayerSpawner`, `@rpc`, autoridade de rede e `HTTPRequest`. |
-| `references/godot-mcp-tools.md` | Manual operacional do MCP: descoberta dinâmica, headless vs runtime bridge, segurança e playtest. |
+| `references/gdscript-4.x.md` | GDScript 2.0, static typing, annotations (`@export`, `@onready`), Callables, lambdas, and Custom Resources. |
+| `references/scenes-and-nodes.md` | SceneTree architecture, node lifecycle, unique scene nodes (`%Node`), Signal Bus, and scene loading. |
+| `references/physics-2d-3d.md` | `CharacterBody2D/3D`, `move_and_slide()`, collisions (layers/masks), raycasts, slopes, coyote time, and Navigation. |
+| `references/ui.md` | `Control`, Containers, Anchor Presets, Size Flags, themes (`StyleBoxFlat`), accessibility, and focus navigation. |
+| `references/animation.md` | `AnimationPlayer`, `AnimationTree` (StateMachine/BlendTree), SpriteFrames, and `Tween` recipes. |
+| `references/audio.md` | `AudioStreamPlayer`, buses, effects, `AudioStreamRandomizer`, pooling, and audio transitions. |
+| `references/shaders.md` | CanvasItem (2D) and Spatial (3D), uniforms, screen textures, damage flash, outlines, and dissolve effects. |
+| `references/networking.md` | `MultiplayerSynchronizer`, `MultiplayerSpawner`, `@rpc`, network authority, and `HTTPRequest`. |
+| `references/godot-mcp-tools.md` | MCP operational manual: dynamic discovery, headless vs runtime bridge, safety, and playtesting. |
 
 ---
 
-## Fluxo Operacional Padrão
+## Standard Operational Flow
 
 ```mermaid
 flowchart TD
-    A[1. OBSERVE] --> B[2. PLANEJE]
-    B --> C[3. IMPLEMENTE]
-    C --> D[4. VALIDE]
-    D --> E{Passou nos testes?}
-    E -- Não --> F[Diagnosticar & Corrigir]
+    A[1. OBSERVE] --> B[2. PLAN]
+    B --> C[3. IMPLEMENT]
+    C --> D[4. VALIDATE]
+    D --> E{Passed tests?}
+    E -- No --> F[Diagnose & Fix]
     F --> C
-    E -- Sim --> G[5. RELATE]
+    E -- Yes --> G[5. REPORT]
 ```
 
-### 1. OBSERVE (Coleta de Contexto)
-- Identifique a versão do Godot e localização do arquivo `project.godot`.
-- Identifique a cena principal (`application/run/main_scene`), autoloads e `InputMap`.
-- Inspecione a cena alvo, nós filhos, scripts anexados e recursos associados.
-- Verifique os erros atuais no console/debugger.
-- Descubra quais ferramentas MCP estão ativas na sessão.
+### 1. OBSERVE (Context Gathering)
+- Identify Godot version and location of `project.godot`.
+- Identify main scene (`application/run/main_scene`), autoloads, and `InputMap`.
+- Inspect target scene, child nodes, attached scripts, and associated resources.
+- Check current errors in console/debugger.
+- Discover which MCP tools are active in the session.
 
-### 2. PLANEJE (Estratégia)
-- Defina o resultado observável esperado (ex.: "O personagem pula ao pressionar 'jump' e aterrissa").
-- Isole os nós, arquivos e sinais que precisam de modificação.
-- Garanta que a arquitetura respeita o isolamento de responsabilidades.
-- Escolha a estratégia de validação (estática, headless ou playtest com captura).
+### 2. PLAN (Strategy)
+- Define the expected observable outcome (e.g., "Player jumps on 'jump' action and lands safely").
+- Isolate nodes, files, and signals requiring modification.
+- Ensure architecture respects single responsibility and separation of concerns.
+- Choose validation strategy (static, headless, or runtime playtest).
 
-### 3. IMPLEMENTE (Execução Precisa)
-- Utilize as ferramentas MCP mais adequadas (ou edição cirúrgica de arquivos).
-- Siga as diretrizes de código tipado do GDScript 2.0.
-- Mantenha a consistência de estilo e nomes do projeto existente.
+### 3. IMPLEMENT (Precise Execution)
+- Use the most suitable MCP tools (or surgical file editing).
+- Follow GDScript 2.0 static typing guidelines.
+- Maintain stylistic and naming consistency with the existing codebase.
 
-### 4. VALIDE (Garantia de Qualidade)
-- **Validação Estática**: Verifique integridade de sintaxe e tipos no GDScript.
-- **Validação de Cena**: Confirme se os nós, shapes e propriedades estão configurados no `.tscn`.
-- **Validação em Runtime**: Execute a cena ou o projeto, interaja ou simule eventos e inspecione logs e capturas de tela.
+### 4. VALIDATE (Quality Assurance)
+- **Static Validation**: Verify syntax and typing integrity in GDScript.
+- **Scene Validation**: Confirm nodes, shapes, and properties are properly configured in `.tscn`.
+- **Runtime Validation**: Run scene/project, simulate inputs, and inspect logs and screenshots.
 
-### 5. RELATE (Transparência)
-- Liste os arquivos e nós modificados.
-- Apresente as evidências coletadas (logs, screenshots, resultados de testes).
-- Informe eventuais limitações ou testes pendentes.
-
----
-
-## Integração MCP e Segurança
-
-O ecossistema Godot MCP possui múltiplas implementações ativas (ex.: `tugcantopaloglu/godot-mcp` com 157 ferramentas e `IvanMurzak/Godot-MCP` com 42 ferramentas).
-
-- **Descoberta Dinâmica**: Sempre consulte o schema de ferramentas da sessão atual antes de invocar comandos.
-- **Mitigação de Segurança**: Garanta que caminhos de arquivos permaneçam dentro do diretório do projeto e utilize operações atômicas.
-- **Ponte de Runtime**: Se comandos de runtime (`game_eval`, inspeção ao vivo) falharem, valide se o jogo está ativo e a porta local (`127.0.0.1:9090` ou WebSocket correspondente) está aberta.
+### 5. REPORT (Transparency)
+- List modified files and nodes.
+- Present collected evidence (logs, screenshots, test results).
+- Report any limitations or pending manual tests.
 
 ---
 
-## Desenvolvimento do Jogo do Nicolas ("A Mãe não espera")
+## MCP Integration & Safety
 
-Trate o projeto como um jogo completo, polido e iterável:
+The Godot MCP ecosystem has multiple active implementations (e.g., `tugcantopaloglu/godot-mcp` with 157 tools and `IvanMurzak/Godot-MCP` with 42 tools).
 
-$$\text{Game Loop} \rightarrow \text{Player (Movimento/Física)} \rightarrow \text{Mundo/Obstáculos} \rightarrow \text{Interação} \rightarrow \text{UI/HUD} \rightarrow \text{Áudio/Feedback} \rightarrow \text{Progresso/Save}$$
-
-Sempre que implementar uma nova mecânica, valide:
-1. **Onde vive na SceneTree?** (Nó específico com responsabilidade única).
-2. **Qual sinal comunica o evento?** (Desacoplamento de UI e áudio).
-3. **Qual Resource armazena os dados?** (Configurações, status, inventário).
-4. **Qual ação do InputMap dispara a mecânica?** (Suporte a teclado e controle).
-5. **Como o jogador recebe feedback imediato?** (Animação, som, partículas, camera shake).
+- **Dynamic Discovery**: Always query the tool schema of the active session before invoking commands.
+- **Security Mitigation**: Ensure file paths remain within the project directory and use atomic operations.
+- **Runtime Bridge**: If runtime commands (`game_eval`, live inspection) fail, verify that the game is running and the local port (`127.0.0.1:9090` or corresponding WebSocket) is open.
 
 ---
 
-## Regra de Conclusão
+## Game Architecture Pipeline
 
-Uma tarefa só é dada como finalizada quando o estado esperado for comprovado no nível exigido. Se o ambiente não permitir execução em runtime, declare explicitamente: *"Implementação concluída e verificada estaticamente; execução em runtime pendente de validação manual pelo usuário."*
+Treat game development as a complete, polished, and iterative loop:
+
+$$\text{Game Loop} \rightarrow \text{Player (Movement/Physics)} \rightarrow \text{World/Obstacles} \rightarrow \text{Interaction} \rightarrow \text{UI/HUD} \rightarrow \text{Audio/Feedback} \rightarrow \text{Save/Progression}$$
+
+Whenever implementing a new feature, validate:
+1. **Where does it live in the SceneTree?** (Dedicated node with single responsibility).
+2. **Which signal communicates the event?** (Decoupled UI and audio).
+3. **Which Resource stores the data?** (Stats, settings, inventory).
+4. **Which InputMap action triggers the mechanics?** (Keyboard and gamepad support).
+5. **How does the player receive immediate feedback?** (Animation, sound, particles, camera shake).
+
+---
+
+## Completion Rule
+
+A task is only finished when the expected state is verified at the required level. If the environment does not allow runtime execution, state explicitly: *"Implementation completed and statically verified; runtime execution pending manual verification by the user."*

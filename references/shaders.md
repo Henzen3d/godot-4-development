@@ -1,28 +1,28 @@
-# Shaders — CanvasItem (2D), Spatial (3D) e Efeitos Práticos
+# Shaders — CanvasItem (2D), Spatial (3D) & Practical Effects
 
-## Propósito
+## Purpose
 
-Dominar a escrita de shaders em GLSL para a Godot Engine 4.x, incluindo uniforms modernos, leitura de texturas de tela (`hint_screen_texture`) e receitas práticas para efeitos de gameplay e feedback visual.
+Master GLSL shader development in Godot Engine 4.x, including modern uniform syntax, screen texture sampling (`hint_screen_texture`), and production recipes for gameplay effects and visual feedback.
 
 ---
 
-## 1. Tipos de Shaders e Funções de Pipeline
+## 1. Shader Types & Pipeline Functions
 
 ```glsl
-shader_type canvas_item; // Ou "spatial" para 3D, "particles", "fog", "sky"
+shader_type canvas_item; // Or "spatial" for 3D, "particles", "fog", "sky"
 
-// Executado para cada vértice da malha/sprite
+// Executed for every vertex in the mesh/sprite
 void vertex() {
-    // Exemplo: Deformação por onda de vento
+    // Example: Wind waving displacement
     // VERTEX.x += sin(TIME * 5.0 + VERTEX.y) * 2.0;
 }
 
-// Executado para cada pixel renderizado
+// Executed for every rendered pixel/fragment
 void fragment() {
     // COLOR = ...
 }
 
-// Executado para cálculo de iluminação personalizada
+// Executed for custom lighting calculations
 void light() {
     // LIGHT = ...
 }
@@ -30,23 +30,23 @@ void light() {
 
 ---
 
-## 2. Uniforms e Hints no Godot 4
+## 2. Uniforms and Hints in Godot 4
 
 ```glsl
 uniform vec4 hit_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);
 uniform float progress : hint_range(0.0, 1.0, 0.01) = 0.0;
 uniform sampler2D noise_texture : repeat_enable, filter_linear;
 
-// No Godot 4, leitura de tela exige uniform explícito com hint_screen_texture
+// In Godot 4, reading screen pixels requires an explicit uniform with hint_screen_texture
 uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
 ```
 
 ---
 
-## 3. Receitas de Shaders Prontos para Produção
+## 3. Production Shader Recipes
 
-### A. Flash de Dano (Hit Flash 2D)
-Ideal para piscar o sprite de branco/vermelho ao receber dano:
+### A. 2D Hit Flash Shader
+Flashes a character white/red upon taking damage:
 
 ```glsl
 shader_type canvas_item;
@@ -56,13 +56,13 @@ uniform float flash_modifier : hint_range(0.0, 1.0) = 0.0;
 
 void fragment() {
     vec4 tex_color = texture(TEXTURE, UV);
-    // Mistura a cor da textura com a cor do flash preservando a transparência original
+    // Blend texture color with flash color preserving original alpha
     COLOR.rgb = mix(tex_color.rgb, flash_color.rgb, flash_modifier);
     COLOR.a = tex_color.a;
 }
 ```
 
-Controlado via GDScript:
+Controlled via GDScript:
 ```gdscript
 func take_damage() -> void:
     var mat := sprite.material as ShaderMaterial
@@ -73,8 +73,8 @@ func take_damage() -> void:
 
 ---
 
-### B. Contorno 2D (Outline Shader)
-Destaca itens interativos ou o personagem selecionado:
+### B. 2D Outline Shader
+Highlights interactive objects or selected characters:
 
 ```glsl
 shader_type canvas_item;
@@ -86,7 +86,7 @@ void fragment() {
     vec2 size = TEXTURE_PIXEL_SIZE * outline_width;
     float alpha = texture(TEXTURE, UV).a;
     
-    // Amostra os 4 vizinhos (cima, baixo, esquerda, direita)
+    // Sample 4 neighboring pixels (up, down, left, right)
     float outline = texture(TEXTURE, UV + vec2(-size.x, 0.0)).a;
     outline += texture(TEXTURE, UV + vec2(size.x, 0.0)).a;
     outline += texture(TEXTURE, UV + vec2(0.0, -size.y)).a;
@@ -100,8 +100,8 @@ void fragment() {
 
 ---
 
-### C. Dissolução / Desintegração (Dissolve Shader)
-Para morte de inimigos ou spawn de chefes:
+### C. Dissolve / Disintegration Shader
+For enemy death or boss spawn transitions:
 
 ```glsl
 shader_type canvas_item;
@@ -115,12 +115,12 @@ void fragment() {
     vec4 tex_color = texture(TEXTURE, UV);
     float noise_val = texture(noise_texture, UV).r;
     
-    // Descarta pixel se o valor de ruído for inferior ao threshold
+    // Discard fragment if noise is below threshold
     if (noise_val < dissolve_amount) {
         discard;
     }
     
-    // Adiciona borda incandescente na linha de corte
+    // Glowing burn edge along cut line
     if (noise_val < dissolve_amount + burn_size) {
         COLOR = burn_color;
     } else {
@@ -131,8 +131,8 @@ void fragment() {
 
 ---
 
-### D. Vinheta de Tela (Post-Processing 2D/3D)
-Aplicado em um nó `ColorRect` em tela cheia (Full Rect) dentro de um `CanvasLayer`:
+### D. Screen Vignette (2D/3D Post-Processing)
+Applied to a fullscreen `ColorRect` inside a `CanvasLayer`:
 
 ```glsl
 shader_type canvas_item;
@@ -151,7 +151,7 @@ void fragment() {
 
 ---
 
-## 4. Boas Práticas e Depuração
+## 4. Best Practices & Performance
 
-1. **Evite `discard` desnecessário em mobile:** O comando `discard` desativa otimizações de early-Z em GPUs mobile antigas. Em sprites 2D isolados é seguro.
-2. **Reaproveite materiais:** Se 50 inimigos usam o mesmo shader de flash, compartilhe o mesmo `ShaderMaterial` ou use `set_instance_shader_parameter()` para controlar valores individuais sem quebrar o batching de draw calls.
+1. **Avoid unnecessary `discard` on mobile:** The `discard` instruction disables early-Z optimizations on older mobile GPUs. For isolated 2D sprites, it is safe.
+2. **Reuse materials:** When multiple enemies share the same flash shader, share a single `ShaderMaterial` instance or use `set_instance_shader_parameter()` to tweak individual values without breaking draw-call batching.

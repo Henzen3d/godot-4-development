@@ -1,74 +1,74 @@
-# UI — Sistema de Interface, Layouts e Temas
+# UI — Interface Systems, Layouts & Themes
 
-## Propósito
+## Purpose
 
-Construir interfaces responsivas, acessíveis por teclado/gamepad, esteticamente polidas e desacopladas da lógica de gameplay na Godot Engine 4.x.
+Build responsive, gamepad/keyboard accessible, aesthetically polished user interfaces decoupled from gameplay logic in Godot Engine 4.x.
 
 ---
 
-## 1. Contêineres e Hierarquia de Layout
+## 1. Containers and Layout Hierarchy
 
-Nunca posicione elementos de interface com coordenadas manuais (`position`). Use **Containers**:
+Never position interface elements using manual coordinates (`position`). Always use **Containers**:
 
 ```text
 CanvasLayer (Layer = 1)
-└── MarginContainer (Anchors: Full Rect | Margens: 24px)
+└── MarginContainer (Anchors: Full Rect | Margins: 24px)
     └── VBoxContainer
-        ├── HBoxContainer (Barra Superior)
-        │   ├── TextureRect (Ícone do Jogador)
+        ├── HBoxContainer (Top Bar)
+        │   ├── TextureRect (Player Avatar)
         │   ├── ProgressBar (HealthBar - Size Flag: Expand Fill)
-        │   └── Label (Pontuação)
-        ├── Control (Espaçador - Size Flag: Expand Fill)
-        └── PanelContainer (Caixa de Diálogo / Notificação)
+        │   └── Label (Score)
+        ├── Control (Spacer - Size Flag: Expand Fill)
+        └── PanelContainer (Dialogue Box / Notification)
 ```
 
-### Principais Contêineres
-- **`MarginContainer`:** Adiciona margens externas consistentes (padding).
-- **`VBoxContainer` / `HBoxContainer`:** Alinha nós vertical ou horizontalmente com espaçamento uniforme (`theme_override_constants/separation`).
-- **`GridContainer`:** Organiza itens em colunas fixas (ideal para inventários e lojas).
-- **`PanelContainer`:** Desenha uma moldura/fundo com `StyleBox` ao redor do conteúdo interno.
-- **`CenterContainer`:** Centraliza menus ou popups no centro da tela.
-- **`ScrollContainer`:** Cria áreas de rolagem para textos longos ou listas de itens.
+### Key UI Containers
+- **`MarginContainer`:** Adds consistent external padding around its children.
+- **`VBoxContainer` / `HBoxContainer`:** Aligns nodes vertically or horizontally with uniform spacing (`theme_override_constants/separation`).
+- **`GridContainer`:** Organizes children in fixed columns (ideal for inventory grids and shops).
+- **`PanelContainer`:** Draws a background frame with a `StyleBox` around child contents.
+- **`CenterContainer`:** Centers menus or popups in the middle of the screen.
+- **`ScrollContainer`:** Provides scrollable viewports for long text or item lists.
 
 ---
 
-## 2. Size Flags (Controle de Expansão)
+## 2. Size Flags (Expansion Control)
 
-Nos nós filhos dentro de contêineres:
-- **`Shrink Begin / Center / End`:** Ocupa apenas o tamanho mínimo necessário.
-- **`Fill`:** Preenche o espaço disponível sem solicitar espaço extra.
-- **`Expand + Fill`:** Requisita todo o espaço restante do contêiner pai e se estende nele.
+For child nodes inside containers:
+- **`Shrink Begin / Center / End`:** Occupies only the minimum required size.
+- **`Fill`:** Fills available allotted space without requesting extra room.
+- **`Expand + Fill`:** Requests all remaining space from the parent container and expands to fill it.
 
 ---
 
-## 3. Mouse Filters e Consumo de Input
+## 3. Mouse Filters and Input Consumption
 
-O comportamento de clique de um `Control` é definido por `mouse_filter`:
+Click behaviors of `Control` nodes are determined by `mouse_filter`:
 
-| Modo | Efeito | Uso Recomendado |
+| Mode | Effect | Recommended Use |
 |---|---|---|
-| `STOP` (Padrão) | Consome o evento do mouse; não passa para nós inferiores nem para o jogo. | `Button`, `Slider`, `LineEdit`. |
-| `PASS` | Reage ao evento, mas permite que o contêiner pai também receba o evento. | Itens de lista clicáveis. |
-| `IGNORE` | Transparente ao mouse; os cliques passam diretamente para o mundo do jogo. | `Label`, `TextureRect` de fundo, `MarginContainer`. |
+| `STOP` (Default) | Consumes the mouse event; does not pass it down to lower nodes or gameplay. | `Button`, `Slider`, `LineEdit`. |
+| `PASS` | Responds to the event, but allows parent container to receive it as well. | Clickable list items. |
+| `IGNORE` | Transparent to mouse events; clicks pass through to the game world. | `Label`, background `TextureRect`, fullscreen `MarginContainer`. |
 
 > [!WARNING]
-> Se cliques no jogo não estiverem funcionando, verifique se um `MarginContainer` ou `Control` em tela cheia está configurado com `mouse_filter = STOP`. Mude para `IGNORE`.
+> If game clicks are not registering, check if a fullscreen `MarginContainer` or `Control` is set to `mouse_filter = STOP`. Change it to `IGNORE`.
 
 ---
 
-## 4. Foco e Navegação por Teclado/Gamepad
+## 4. Focus Navigation for Gamepad & Keyboard
 
-Para suporte nativo a controles (Xbox, PlayStation) e teclado sem mouse:
+For native controller (Xbox, PlayStation) and keyboard navigation:
 
 ```gdscript
 extends Control
 
 func _ready() -> void:
-    # Garante que o primeiro botão recebe o foco inicial ao abrir o menu
+    # Ensure first button receives initial focus when menu opens
     %StartButton.grab_focus()
 
 func setup_focus_neighbors() -> void:
-    # Vinculação explícita de navegação (se a ordem automática falhar)
+    # Explicit focus neighboring (if automatic order needs overriding)
     %StartButton.focus_neighbor_bottom = %OptionsButton.get_path()
     %OptionsButton.focus_neighbor_top = %StartButton.get_path()
     %OptionsButton.focus_neighbor_bottom = %QuitButton.get_path()
@@ -77,14 +77,14 @@ func setup_focus_neighbors() -> void:
 
 ---
 
-## 5. Estilização com `StyleBoxFlat` e Temas
+## 5. Styling with `StyleBoxFlat` and Themes
 
-Crie botões e painéis com visual moderno via código ou `.tres`:
+Create modern UI buttons and panels via code or `.tres` themes:
 
 ```gdscript
 func apply_custom_button_style(button: Button) -> void:
     var style_normal := StyleBoxFlat.new()
-    style_normal.bg_color = Color("#1e293b") # Slate escuro
+    style_normal.bg_color = Color("#1e293b") # Dark slate
     style_normal.corner_radius_top_left = 8
     style_normal.corner_radius_top_right = 8
     style_normal.corner_radius_bottom_left = 8
@@ -93,7 +93,7 @@ func apply_custom_button_style(button: Button) -> void:
     style_normal.content_margin_right = 16.0
     
     var style_hover := style_normal.duplicate() as StyleBoxFlat
-    style_hover.bg_color = Color("#3b82f6") # Azul destaque
+    style_hover.bg_color = Color("#3b82f6") # Accent blue
     
     button.add_theme_stylebox_override("normal", style_normal)
     button.add_theme_stylebox_override("hover", style_hover)
@@ -102,21 +102,21 @@ func apply_custom_button_style(button: Button) -> void:
 
 ---
 
-## 6. Configurações de Multi-Resolução
+## 6. Multi-Resolution Display Settings
 
-Em `project.godot > display/window/stretch`:
+Under `project.godot > display/window/stretch`:
 - **`mode`**:
-  - `canvas_items`: Ideal para jogos 2D HD/4K ou 3D (a UI e os vetores são renderizados na resolução nativa do monitor).
-  - `viewport`: Ideal para jogos Pixel Art com resolução interna baixa e fixa (ex.: $320 \times 180$).
+  - `canvas_items`: Recommended for 2D HD/4K or 3D games (UI and vector text render at native monitor resolution).
+  - `viewport`: Recommended for Pixel Art games with fixed low internal resolution (e.g., $320 \times 180$).
 - **`aspect`**:
-  - `keep`: Mantém barras pretas se a proporção de aspecto mudar (ex.: 16:9 em tela 21:9).
-  - `expand`: Permite que a viewport ou UI se expanda para preencher a tela inteira.
+  - `keep`: Preserves aspect ratio with letterboxing (e.g., 16:9 on 21:9 displays).
+  - `expand`: Allows viewport or UI to expand and fill available screen width/height.
 
 ---
 
-## 7. Estrutura de Camadas com `CanvasLayer`
+## 7. Layer Stacking with `CanvasLayer`
 
-- **Layer 1:** HUD principal (vida, munição, radar).
-- **Layer 5:** Caixas de diálogo e legendas.
-- **Layer 10:** Menu de Pausa (`process_mode = PROCESS_MODE_ALWAYS`).
-- **Layer 100:** Transições de tela (fade in/out preto), tela de carregamento e FPS debugger.
+- **Layer 1:** Main HUD (health bar, ammo, radar).
+- **Layer 5:** Dialogue boxes, subtitles, tooltips.
+- **Layer 10:** Pause Menu (`process_mode = PROCESS_MODE_ALWAYS`).
+- **Layer 100:** Screen transitions (black fade in/out), loading screens, FPS debugger overlay.
